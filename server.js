@@ -47,7 +47,13 @@ function filterByQuery(query, animalsArray) {
     return filteredResults;
   }
 
-//add the route
+  //FUNCTION that takes the id and array of animals and return a single animal object
+  function findById(id, animalsArray) {
+    const result = animalsArray.filter(animal => animal.id === id)[0];
+    return result;
+  }
+  
+//QUERY route is multifaceted and combining multiple parameters
 //get() requires 2 args: 1-string describing the route 2-callback function
 //using send() method from res parameter to send string Hello! to our client
 app.get('/api/animals', (req, res) => {
@@ -58,6 +64,19 @@ app.get('/api/animals', (req, res) => {
       }
     console.log(req.query)
     res.json(results);
+});
+
+//PARAM route for specific to a single property often used to retrieve a single record
+//add :id for /:<parameterName> in route path
+//this param route has to come AFTER the other GET route
+app.get('/api/animals/:id', (req, res) => {
+  const result = findById(req.params.id, animals);
+  if (result) {
+    res.json(result);
+    //if no result for animal then send 404 error
+  } else {
+    res.send(404);
+  }
 });
 
 //chain on listen() emthod to server
