@@ -1,5 +1,8 @@
 const express = require('express');
 
+//heroku runs on port 80, therefore set port with
+const PORT = process.env.PORT || 3001;
+
 //instantiate the server with express
 //assign express to app variable so that we can later chain on methods to the server
 const app = express();
@@ -59,8 +62,8 @@ app.get('/api/animals', (req, res) => {
 
 //chain on listen() emthod to server
 //port 3001 not as restrictive as 80 or 443 but easy to remember and common practice
-app.listen(3001, () => {
-    console.log(`API server now on port 3001`);
+app.listen(PORT, () => {
+    console.log(`API server now on port ${PORT}!`);
 });
 
 //creating the route to access data from front end
