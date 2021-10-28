@@ -14,6 +14,7 @@ const PORT = process.env.PORT || 3001;
 //assign express to app variable so that we can later chain on methods to the server
 const app = express();
 
+
 //MIDDLEWARE functions
 // parse incoming string or array data
 //.use() mounts a function to the server that our requests will pass through before getting to the endpoint
@@ -21,6 +22,10 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 // parse incoming JSON data into the req.body
 app.use(express.json());
+//express.static()
+//we provide file path to 'public' and instuct server to make these files static resources; they can be accessed without having a specific server endpoint created for it
+app.use(express.static('public'));
+
 
 //filter by query
 function filterByQuery(query, animalsArray) {
@@ -134,6 +139,7 @@ app.get('/api/animals/:id', (req, res) => {
 app.post('/api/animals', (req, res) => {
 
     // set id based on what the next index of the array will be
+    //req.body to access and use trhe data sent from a client to a server  
     req.body.id = animals.length.toString();
 
     // if any data in req.body is incorrect, send 400 error back
@@ -149,6 +155,30 @@ app.post('/api/animals', (req, res) => {
       console.log(req.body);
       res.json(animal);
     }
+});
+
+//SERVE PAGES through server.js
+//GET route for index.html file
+// '/' brings us to the root route of the server - used to create a homepage for a server
+//unlike most GET and POST routes, this route responds with html page to display in the browser
+app.get('/', (req, res) => {
+  //sendFile tell them wheere to find the file we want the server to read and send back to the client
+  res.sendFile(path.join(__dirname, './public/index.html'));
+});
+//GET route for animals.html file
+//no "api" in route name b/c this serves an html page
+app.get('/animals', (req, res) => {
+  res.sendFile(path.join(__dirname, './public/animals.html'));
+});
+//GET route for zookeepers.html file
+app.get('/zookeepers', (req, res) => {
+  res.sendFile(path.join(__dirname, './public/zookeepers.html'));
+});
+//add WILDCARD route for error requests from client
+//any route that wasn't previsouly defined '*' will receive the homepage
+//order matters; wildcard should always come last
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, './public/index.html'));
 });
 
 //chain on listen() emthod to server
