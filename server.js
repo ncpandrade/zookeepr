@@ -1,4 +1,11 @@
 const express = require('express');
+const fs = require('fs');
+//for working with file and directory paths
+const path = require('path');
+
+//creating the route to access data from front end
+//requiring the data from front end
+const { animals } = require('./data/animals');
 
 //heroku runs on port 80, therefore set port with
 const PORT = process.env.PORT || 3001;
@@ -6,6 +13,14 @@ const PORT = process.env.PORT || 3001;
 //instantiate the server with express
 //assign express to app variable so that we can later chain on methods to the server
 const app = express();
+
+//MIDDLEWARE functions
+// parse incoming string or array data
+//.use() mounts a function to the server that our requests will pass through before getting to the endpoint
+//express.urlencoded() converts key/value pairings that can be accessed in the req.body
+app.use(express.urlencoded({ extended: true }));
+// parse incoming JSON data into the req.body
+app.use(express.json());
 
 //filter by query
 function filterByQuery(query, animalsArray) {
@@ -52,7 +67,43 @@ function filterByQuery(query, animalsArray) {
     const result = animalsArray.filter(animal => animal.id === id)[0];
     return result;
   }
-  
+
+//Function to create new animals
+function createNewAnimal(body, animalsArray) {
+  const animal = body;
+  //add newly created animal to animalsArray
+  //NOTE this only saves in server, not in the file
+  animalsArray.push(animal);
+  //this will add to the file
+  //small file, thus use fs.writeFileSync is synchronous and does not need callback
+  fs.writeFileSync(
+    path.join(__dirname, './data/animals.json'),
+    //save javaScript array as JSON
+    //null means we don't want to edit
+    //2 indicates we want to create white space between our values
+    JSON.stringify({ animals: animalsArray }, null, 2)
+  );
+  // return finished code to post route for response
+  return animal;
+}
+ 
+//validate data for new animal
+function validateAnimal(animal) {
+  if (!animal.name || typeof animal.name !== 'string') {
+    return false;
+  }
+  if (!animal.species || typeof animal.species !== 'string') {
+    return false;
+  }
+  if (!animal.diet || typeof animal.diet !== 'string') {
+    return false;
+  }
+  if (!animal.personalityTraits || !Array.isArray(animal.personalityTraits)) {
+    return false;
+  }
+  return true;
+}
+
 //QUERY route is multifaceted and combining multiple parameters
 //get() requires 2 args: 1-string describing the route 2-callback function
 //using send() method from res parameter to send string Hello! to our client
@@ -79,15 +130,34 @@ app.get('/api/animals/:id', (req, res) => {
   }
 });
 
+//create new API endpoint to store data in the server file
+app.post('/api/animals', (req, res) => {
+
+    // set id based on what the next index of the array will be
+    req.body.id = animals.length.toString();
+
+    // if any data in req.body is incorrect, send 400 error back
+    if (!validateAnimal(req.body)) {
+      //response method to relay message to the client making the request
+      res.status(400).send('The animal is not properly formatted.');
+    } else {
+      // add animal to json file and animals array in this function
+      //send updated req.body data to createNewAnimal()
+      const animal = createNewAnimal(req.body, animals);
+
+      // req.body is object where our incoming content will be
+      console.log(req.body);
+      res.json(animal);
+    }
+});
+
 //chain on listen() emthod to server
 //port 3001 not as restrictive as 80 or 443 but easy to remember and common practice
 app.listen(PORT, () => {
     console.log(`API server now on port ${PORT}!`);
 });
 
-//creating the route to access data from front end
-//requiring the data from front end
-const { animals } = require('./data/animals');
+
 
 
 
